@@ -9,9 +9,11 @@ app.use(morgan('common'));
 app.use(cors());
 
 app.get('/apps', (req, res) => {
+  //get query values
+  const { sort, genre = '' } = req.query;
 
-  //SORTING FUNCTIONS
-  const { sort } = req.query;
+  //temp array for results
+  let results = apps;
 
   //function for sorting alphabetically
   compareStrings = (a, b) => {
@@ -19,92 +21,55 @@ app.get('/apps', (req, res) => {
     b = b.toLowerCase();
     return (a < b) ? -1 : (a > b) ? 1 : 0;
   }
-  
+
+  //sort actions
   if (sort) {
     //check for sorting by rating or name, else say no sort filter there
     if (!['rating', 'name'].includes(sort)) {
-      console.log('No sort filter applied');
       return res
         .status(400)
         .send('Sort must be either rating or App name...');
 
-    //check for rating query, if present, sort by rating
+      //check for rating query, if present, sort by rating
     } else if (["rating"].includes(sort)) {
       //sort, but also sort app name alphabetically after rating
-      apps.sort((a, b) => {
+      results.sort((a, b) => {
         return a.Rating - b.Rating || compareStrings(a.App, b.App);
       });
-    //check for app name query, if present, sort alphabetically by app name
+      //check for app name query, if present, sort alphabetically by app name
     } else if (["name"].includes(sort)) {
-      apps.sort((a, b) => {
+      results.sort((a, b) => {
         return compareStrings(a.App, b.App);
       });
-    }
+      //return original list
+    } else return results;
   }
 
+  //Genre search actions, search all apps with genre text
+  if (genre) {
+    results = results.filter( oneApp => 
+      oneApp
+        .Genres
+        .toLowerCase()
+        .replace("&", "")
+        .replace(";", " ")
+        .includes(genre) 
+    );
+    
+    //check to see if there are any results in the filter used, if not return error
+    if (results.length === 0) {
+      return res 
+        .status(400)
+        .send('Genre search is invalid, please choose from list...');
+    } 
+  }
 
-
-
-  /*  
- 
- 
-     
- 
-    */
-
-
-  //const tempArray = Object.keys(apps).map( key => { return apps[key];});
-
-  //  if (sort = "Rating") {
-  //  apps.sort((a, b) => {
-  //  return a.Rating[sort] > a.Rating[sort] ? 1 : a.Rating[sort] < b.Rating[sort] ? -1 : 0;
-  //});
-  //}
-
-
-
-
-  /*  const jsonAsArray = 
-     .sort(function (itemA, itemB) {
-       return itemA.score < itemB.score;
-     }); */
-
-  //appGenre = "" } = req.query;
-
-  //sort apps by rating or app
-  //  if (sort) {
-  //   if (!['Rating', 'App'].includes(sort)) {
-  //   return res
-  //  .status(400)
-  //   .send('No sort filter applied...')
-  //}
-  //}
-  /* if (sort = "rating") {
-    apps
-      .sort((a.Rating, b.Rating) => {
-        return a.Rating[sort] > a.Rating[sort] ? 1 : a[sort] < b[sort] ? -1 : 0;
-      });
-  } */
-
-
-
-
-  //filter for genres
-  // let results = apps
-  //    .filter(googleApp =>
-  //      googleApp
-  //      .Genres
-  //.includes(appGenre));
-  //    .toLowerCase()
-  //  .includes(search.toLowerCase()));
-
-
-
-
+  //return the response with results
   res
-    .json(apps);
+    .json(results);
 });
 
+//check to see if server is running
 app.listen(8000, () => {
   console.log('Server started on PORT 8000');
 });
