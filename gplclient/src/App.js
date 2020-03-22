@@ -9,14 +9,14 @@ class App extends Component {
     this.state = {
       apps: [],
       sort: '',
-      appGenre: '',
+      genre: '',
       error: null
     }
   }
 
-  setSearch(appGenre) {
+  setGenre(genre) {
     this.setState({
-      appGenre
+      genre
     });
   }
 
@@ -30,8 +30,8 @@ class App extends Component {
     e.preventDefault();
     const baseUrl = 'http://localhost:8000/apps';
     const params = [];
-    if (this.state.appGenre) {
-      params.push(`genre=${this.state.appGenre}`);
+    if (this.state.genre) {
+      params.push(`genre=${this.state.genre}`);
     }
     if (this.state.sort) {
       params.push(`sort=${this.state.sort}`);
@@ -57,37 +57,58 @@ class App extends Component {
           error: 'Sorry, could not get any apps at this time.'
         });
       })
-
   }
 
   render() {
-    const apps = this.state.apps.map((oneApp, i) => {
-      return <GoogleApp {...oneApp} key={i}/>
+    //create apps array that hold the object from GoogleApp
+    const apps = this.state.apps.map((singleApp, index) => {
+      return <GoogleApp {...singleApp} key={index} />
     })
+
     return (
       <main className="App">
         <h1>Google Play Apps</h1>
         <div className="genreSearch">
           <form onSubmit={e => this.handleSubmit(e)}>
-            <label htmlFor="search">Search for a genre: </label>
-            <input
-              type="text"
-              id="search"
-              name="search"
-              value={this.state.appGenre}
-              onChange={e => this.setSearch(e.target.value)}/>
 
-            <label htmlFor="sort">Sort: </label>
-            <select id="sort" name="sort" onChange={e => this.setSort(e.target.value)}>
-              <option value="">None</option>
-              <option value="appName">App</option>
+            <label htmlFor="sortSelect">Sort: </label>
+            <select
+              id="sortSelect"
+              name="sortSelect"
+              onChange={e => this.setSort(e.target.value)}
+            >
+              <option value="none">None</option>
+              <option value="name">App</option>
               <option value="rating">Rating</option>
             </select>
+
+
+
+            <label htmlFor="genreSelect"> Pick a genre to search: </label>
+            <select
+              id="genreSelect"
+              name="genreSelect"
+              onChange={e => this.setGenre(e.target.value)}
+            >
+              <option value="none">None</option>
+
+              
+              <option value="action">Action</option>
+              <option value="puzzle">Puzzle</option>
+              <option value="strategy">Strategy</option>
+              <option value="casual">Casual</option>
+              <option value="arcade">Arcade</option>
+              <option value="card">Card</option>
+              <option value="pretend play">Pretend Play</option>
+            </select>
+
+
+
             <button type="submit">Search</button>
           </form>
-          <div className="App_error">{ this.state.error }</div>
+          <div className="App_error">{this.state.error}</div>
+          <div className="results">{apps}</div>
         </div>
-        {apps}
       </main>
     );
   }

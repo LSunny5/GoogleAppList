@@ -1,0 +1,15 @@
+* {
+    box-sizing: border-box;
+    margin: 20px;
+}
+
+.results {
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+#genreSelect, #sortSelect {
+    width: 20%;
+}
