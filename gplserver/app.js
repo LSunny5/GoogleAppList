@@ -8,15 +8,9 @@ const apps = require('./appList.js');
 app.use(morgan('common'));
 app.use(cors());
 
-
-
 app.get('/apps', (req, res) => {
   //get query values
-  const { sort, genre = '' } = req.query;
-
-  //temp array for results
-  let results = apps;
-  let original = results;
+  const { sort, genre = "" } = req.query;
 
   //function for sorting alphabetically
   compareStrings = (a, b) => {
@@ -25,54 +19,61 @@ app.get('/apps', (req, res) => {
     return (a < b) ? -1 : (a > b) ? 1 : 0;
   }
 
-  //sort actions
-  if (sort) {
+  sortList = tempArray => {
     //check for sorting by rating or name, else say no sort filter there
-    if (!['rating', 'name', 'none'].includes(sort)) {
-      return res
-        .status(400)
-        .send('Sort must be either rating or App name...');
-      //check for rating query, if present, sort by rating
-    } else if (["none"].includes(sort)) {
-      results = apps;
-    }
-    
-    else if (["rating"].includes(sort)) {
-      //sort, but also sort app name alphabetically after rating
-      results.sort((a, b) => {
+    if (["rating"].includes(sort)) {
+      const temp = [...tempArray].sort((a, b) => {
         return a.Rating - b.Rating || compareStrings(a.App, b.App);
       });
+      return res.json(temp);
+
       //check for app name query, if present, sort alphabetically by app name
     } else if (["name"].includes(sort)) {
-      results.sort((a, b) => {
+      const temp = [...tempArray].sort((a, b) => {
         return compareStrings(a.App, b.App);
       });
-      //return original list
-    } 
+      return res.json(temp);
+    }
+  }
+
+  //initial page load, return all apps if null or none for filters
+  if ((!genre && !sort) || (["none"].includes(genre) && ["none"].includes(sort)) ||
+    (["none"].includes(sort) && !genre) || (["none"].includes(genre) && !sort)) {
+    return res.json(apps);
   }
 
   //Genre search actions, search all apps with genre text
   if (genre) {
-      results = results.filter(oneApp =>
-        oneApp
-          .Genres
-          .toLowerCase()
-          .replace("&", "")
-          .replace(";", " ")
-          .includes(genre.toLowerCase())
-      );
-    
-    //check to see if there are any results in the filter used, if not return error
-    if (results.length === 0) {
-      return res
-        .status(400)
-        .send('Genre search is invalid, please choose from list...');
+    //if genre is none then return full array
+    if (["none"].includes(genre)) {
+      return sortList(apps);
     }
+
+    //filter apps based on genre type selected
+    let results = apps.filter(oneApp =>
+      oneApp
+        .Genres
+        .toLowerCase()
+        .replace("&", "")
+        .replace(";", " ")
+        .includes(genre.toLowerCase())
+    );
+
+    //genre and sort filter applied
+    if (sort) {
+      if (["none"].includes(sort)) {
+        return res.json(results);
+      }
+      return sortList(results);
+    }
+    return res.json(results);
+  }
+  
+  //sort if genre is null
+  if (sort && !genre) {
+    return sortList(apps);
   }
 
-  //return the response with results
-  res
-    .json(results);
 });
 
 //check to see if server is running

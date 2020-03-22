@@ -30,6 +30,7 @@ class App extends Component {
     e.preventDefault();
     const baseUrl = 'http://localhost:8000/apps';
     const params = [];
+    
     if (this.state.genre) {
       params.push(`genre=${this.state.genre}`);
     }
@@ -70,7 +71,6 @@ class App extends Component {
         <h1>Google Play Apps</h1>
         <div className="genreSearch">
           <form onSubmit={e => this.handleSubmit(e)}>
-
             <label htmlFor="sortSelect">Sort: </label>
             <select
               id="sortSelect"
@@ -82,8 +82,6 @@ class App extends Component {
               <option value="rating">Rating</option>
             </select>
 
-
-
             <label htmlFor="genreSelect"> Pick a genre to search: </label>
             <select
               id="genreSelect"
@@ -91,8 +89,6 @@ class App extends Component {
               onChange={e => this.setGenre(e.target.value)}
             >
               <option value="none">None</option>
-
-              
               <option value="action">Action</option>
               <option value="puzzle">Puzzle</option>
               <option value="strategy">Strategy</option>
@@ -101,8 +97,6 @@ class App extends Component {
               <option value="card">Card</option>
               <option value="pretend play">Pretend Play</option>
             </select>
-
-
 
             <button type="submit">Search</button>
           </form>
