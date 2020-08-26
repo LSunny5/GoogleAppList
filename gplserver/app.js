@@ -1,79 +1,52 @@
-const express = require('express');
-const morgan = require('morgan');
-const cors = require('cors');
+require('dotenv').config()
+const express = require('express')
+const morgan = require('morgan')
+const POKEDEX = require('./pokedex.json')
 
-const app = express();
-const apps = require('./appList.js');
+const app = express()
 
-app.use(morgan('common'));
-app.use(cors());
+app.use(morgan('dev'))
 
-app.get('/apps', (req, res) => {
-  //get query values
-  const { sort, genre = "" } = req.query;
+app.use(function validateBearerToken(req, res, next) {
+  const apiToken = process.env.API_TOKEN
+  const authToken = req.get('Authorization')
 
-  //function for sorting alphabetically
-  compareStrings = (a, b) => {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    return (a < b) ? -1 : (a > b) ? 1 : 0;
+  if (!authToken || authToken.split(' ')[1] !== apiToken) {
+    return res.status(401).json({ error: 'Unauthorized request' })
+  }
+  // move to the next middleware
+  next()
+})
+
+const validTypes = [`Bug`, `Dark`, `Dragon`, `Electric`, `Fairy`, `Fighting`, `Fire`, `Flying`, `Ghost`, `Grass`, `Ground`, `Ice`, `Normal`, `Poison`, `Psychic`, `Rock`, `Steel`, `Water`]
+
+app.get('/types', function handleGetTypes(req, res) {
+  res.json(validTypes)
+})
+
+app.get('/pokemon', function handleGetPokemon(req, res) {
+  let response = POKEDEX.pokemon;
+
+  // filter our pokemon by name if name query param is present
+  if (req.query.name) {
+    response = response.filter(pokemon =>
+      // case insensitive searching
+      pokemon.name.toLowerCase().includes(req.query.name.toLowerCase())
+    )
   }
 
-  sortList = tempArray => {
-    //check for sorting by rating or name, else say no sort filter there
-    if (["rating"].includes(sort)) {
-      const temp = [...tempArray].sort((a, b) => {
-        return a.Rating - b.Rating || compareStrings(a.App, b.App);
-      });
-      return res.json(temp);
-
-      //check for app name query, if present, sort alphabetically by app name
-    } else if (["name"].includes(sort)) {
-      const temp = [...tempArray].sort((a, b) => {
-        return compareStrings(a.App, b.App);
-      });
-      return res.json(temp);
-    }
+  // filter our pokemon by type if type query param is present
+  if (req.query.type) {
+    response = response.filter(pokemon =>
+      pokemon.type.includes(req.query.type)
+    )
   }
 
-  //initial page load, return all apps if null or none for filters
-  if ((!genre && !sort) || (["none"].includes(genre) && ["none"].includes(sort)) ||
-    (["none"].includes(sort) && !genre) || (["none"].includes(genre) && !sort)) {
-    return res.json(apps);
-  }
+  res.json(response)
+})
 
-  //Genre search actions, search all apps with genre text
-  if (genre) {
-    //if genre is none then return full array
-    if (["none"].includes(genre)) {
-      return sortList(apps);
-    }
+const PORT = 8000
 
-    //filter apps based on genre type selected
-    let results = apps.filter(oneApp =>
-      oneApp
-        .Genres
-        .toLowerCase()
-        .replace("&", "")
-        .replace(";", " ")
-        .includes(genre.toLowerCase())
-    );
-
-    //genre and sort filter applied
-    if (sort) {
-      if (["none"].includes(sort)) {
-        return res.json(results);
-      }
-      return sortList(results);
-    }
-    return res.json(results);
-  }
-  
-  //sort if genre is null
-  if (sort && !genre) {
-    return sortList(apps);
-  }
-
-});
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`)
+})
